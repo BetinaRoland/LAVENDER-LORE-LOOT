@@ -1,0 +1,9 @@
+node_modules/
+*.db
+*.log
+.DS_Store
+.env
+package-lock.json
+.vscode/
+*.sqlite
+*.sqlite3

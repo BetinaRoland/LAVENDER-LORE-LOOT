@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Courses - LavenderLearn</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>LavenderLearn</h2>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Home</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Educational</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="novels.html">Novels</a></li>
+                        <li><a href="courses.html" class="active">Online Courses</a></li>
+                        <li><a href="notes.html">Study Notes</a></li>
+                        <li><a href="placement.html">Placement Prep</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Office Supplies</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="stationery.html">Stationery</a></li>
+                        <li><a href="tech-accessories.html">Tech Accessories</a></li>
+                        <li><a href="organization.html">Organization</a></li>
+                        <li><a href="art-supplies.html">Art Supplies</a></li>
+                    </ul>
+                </li>
+                <li><a href="cart.html">Cart <span class="cart-count" id="cartCount">0</span></a></li>
+                <li><a href="track-order.html">Track Order</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>💻 Online Courses</h1>
+                <p>Master programming languages and technologies with comprehensive courses</p>
+            </div>
+        </section>
+
+        <section class="filters-section">
+            <div class="container">
+                <input type="text" 
+                       class="search-bar" 
+                       id="searchInput" 
+                       placeholder="Search courses...">
+                
+                <div class="filter-controls" style="margin-top: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                    <label for="sortSelect" style="font-weight: 600; color: var(--dark-lavender);">Sort by:</label>
+                    <select id="sortSelect" style="padding: 10px 15px; border: 2px solid var(--light-lavender); border-radius: 8px; font-size: 1rem;">
+                        <option value="default">Default</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="name">Name: A to Z</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <div class="product-grid" id="productsGrid">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 LavenderLearn & Supply. Built by B Betina Roland.</p>
+            <p>NEC First Year CSE Project</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/products.js"></script>
+    <script>
+        let currentProducts = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+            initSearch();
+            initSort();
+        });
+
+        function loadProducts() {
+            currentProducts = getProductsByCategory('courses');
+            displayProducts(currentProducts, 'productsGrid');
+        }
+
+        function initSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const debouncedSearch = debounce((query) => {
+                if (query.trim()) {
+                    const allCourses = getProductsByCategory('courses');
+                    const filtered = allCourses.filter(p => 
+                        p.name.toLowerCase().includes(query.toLowerCase()) ||
+                        p.description.toLowerCase().includes(query.toLowerCase())
+                    );
+                    currentProducts = filtered;
+                } else {
+                    currentProducts = getProductsByCategory('courses');
+                }
+                applyCurrentSort();
+            }, 300);
+
+            searchInput.addEventListener('input', (e) => {
+                debouncedSearch(e.target.value);
+            });
+        }
+
+        function initSort() {
+            const sortSelect = document.getElementById('sortSelect');
+            sortSelect.addEventListener('change', () => {
+                applyCurrentSort();
+            });
+        }
+
+        function applyCurrentSort() {
+            const sortSelect = document.getElementById('sortSelect');
+            const sortBy = sortSelect.value;
+            const sorted = sortProducts(currentProducts, sortBy);
+            displayProducts(sorted, 'productsGrid');
+        }
+    </script>
+</body>
+</html>

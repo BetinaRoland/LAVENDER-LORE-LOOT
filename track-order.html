@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - LavenderLearn</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>LavenderLearn</h2>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Home</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Educational</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="novels.html">Novels</a></li>
+                        <li><a href="courses.html">Online Courses</a></li>
+                        <li><a href="notes.html">Study Notes</a></li>
+                        <li><a href="placement.html">Placement Prep</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Office Supplies</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="stationery.html">Stationery</a></li>
+                        <li><a href="tech-accessories.html">Tech Accessories</a></li>
+                        <li><a href="organization.html">Organization</a></li>
+                        <li><a href="art-supplies.html">Art Supplies</a></li>
+                    </ul>
+                </li>
+                <li><a href="cart.html">Cart <span class="cart-count" id="cartCount">0</span></a></li>
+                <li><a href="track-order.html" class="active">Track Order</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>📦 Track Your Order</h1>
+                <p>Enter your email to view order status</p>
+            </div>
+        </section>
+
+        <section style="padding: 40px 20px;">
+            <div class="container">
+                <div style="max-width: 800px; margin: 0 auto; background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px var(--shadow);">
+                    <form id="trackingForm" style="margin-bottom: 40px;">
+                        <div class="form-group">
+                            <label for="trackEmail">Email Address</label>
+                            <input type="email" id="trackEmail" required placeholder="Enter your email">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Track Orders</button>
+                    </form>
+                    
+                    <div id="ordersContainer" style="display: none;">
+                    </div>
+                    
+                    <div id="noOrders" style="display: none; text-align: center; padding: 40px;">
+                        <h3 style="color: var(--dark-lavender); margin-bottom: 15px;">No orders found</h3>
+                        <p style="color: var(--text-light); margin-bottom: 30px;">We couldn't find any orders with this email address.</p>
+                        <a href="courses.html" class="btn btn-primary">Start Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 LavenderLearn & Supply. Built by B Betina Roland.</p>
+            <p>NEC First Year CSE Project</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/products.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initTrackingForm();
+        });
+
+        function initTrackingForm() {
+            const form = document.getElementById('trackingForm');
+            
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('trackEmail').value;
+                displayOrders(email);
+            });
+        }
+
+        function displayOrders(email) {
+            const allOrders = getOrders();
+            const userOrders = allOrders.filter(order => order.email === email);
+            
+            const ordersContainer = document.getElementById('ordersContainer');
+            const noOrders = document.getElementById('noOrders');
+            
+            if (userOrders.length === 0) {
+                ordersContainer.style.display = 'none';
+                noOrders.style.display = 'block';
+                return;
+            }
+            
+            noOrders.style.display = 'none';
+            ordersContainer.style.display = 'block';
+            
+            ordersContainer.innerHTML = `
+                <h2 style="color: var(--dark-lavender); margin-bottom: 30px;">Your Orders</h2>
+                ${userOrders.map(order => createOrderCard(order)).join('')}
+            `;
+        }
+
+        function createOrderCard(order) {
+            const statusIndex = getStatusIndex(order.status);
+            const deliveryDate = new Date(order.deliveryDate);
+            
+            return `
+                <div style="background: var(--light-lavender); padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <h3 style="color: var(--primary-lavender); margin-bottom: 5px;">Order ${order.orderId}</h3>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Placed on ${formatDate(new Date(order.placedAt))}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="font-size: 1.2rem; font-weight: 700; color: var(--dark-lavender);">${formatCurrency(order.total)}</p>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">${order.items.length} items</p>
+                        </div>
+                    </div>
+                    
+                    <div class="order-status">
+                        <div class="status-step ${statusIndex >= 0 ? 'completed' : ''}">
+                            <div class="status-circle">1</div>
+                            <p class="status-label">Ordered</p>
+                        </div>
+                        <div class="status-step ${statusIndex >= 1 ? 'completed' : ''}">
+                            <div class="status-circle">2</div>
+                            <p class="status-label">Packed</p>
+                        </div>
+                        <div class="status-step ${statusIndex >= 2 ? 'completed' : ''}">
+                            <div class="status-circle">3</div>
+                            <p class="status-label">Shipped</p>
+                        </div>
+                        <div class="status-step ${statusIndex >= 3 ? 'completed' : ''}">
+                            <div class="status-circle">4</div>
+                            <p class="status-label">Delivered</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--white); padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <h4 style="color: var(--dark-lavender); margin-bottom: 15px;">Order Items:</h4>
+                        ${order.items.map(item => `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>${item.name} × ${item.quantity}</span>
+                                <span style="font-weight: 600; color: var(--primary-lavender);">₹${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: var(--white); border-radius: 10px;">
+                        <p style="color: var(--text-light); margin-bottom: 5px;">Delivery to: <strong>${order.city}</strong></p>
+                        <p style="color: var(--success); font-weight: 600;">
+                            ${order.status === 'Delivered' ? 'Delivered on' : 'Estimated delivery'}: ${formatDate(deliveryDate)}
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getStatusIndex(status) {
+            const statuses = ['Ordered', 'Packed', 'Shipped', 'Delivered'];
+            return statuses.indexOf(status);
+        }
+    </script>
+</body>
+</html>

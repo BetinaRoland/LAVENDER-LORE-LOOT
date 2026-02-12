@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - LavenderLearn</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>LavenderLearn</h2>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Home</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Educational</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="novels.html">Novels</a></li>
+                        <li><a href="courses.html">Online Courses</a></li>
+                        <li><a href="notes.html">Study Notes</a></li>
+                        <li><a href="placement.html">Placement Prep</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Office Supplies</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="stationery.html">Stationery</a></li>
+                        <li><a href="tech-accessories.html">Tech Accessories</a></li>
+                        <li><a href="organization.html">Organization</a></li>
+                        <li><a href="art-supplies.html">Art Supplies</a></li>
+                    </ul>
+                </li>
+                <li><a href="cart.html">Cart <span class="cart-count" id="cartCount">0</span></a></li>
+                <li><a href="track-order.html">Track Order</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>✅ Checkout</h1>
+                <p>Complete your order</p>
+            </div>
+        </section>
+
+        <section style="padding: 40px 20px;">
+            <div class="container">
+                <div style="display: grid; grid-template-columns: 1fr 400px; gap: 30px;">
+                    <div style="background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px var(--shadow);">
+                        <h2 style="color: var(--dark-lavender); margin-bottom: 30px;">Delivery Information</h2>
+                        
+                        <form id="checkoutForm">
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="city">Delivery City *</label>
+                                <input type="text" id="city" name="city" required placeholder="Enter your city">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="address">Full Address (Optional)</label>
+                                <input type="text" id="address" name="address" placeholder="Street, Building, Apartment">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone Number (Optional)</label>
+                                <input type="tel" id="phone" name="phone" placeholder="10-digit mobile number">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+                                Place Order
+                            </button>
+                        </form>
+                        
+                        <div id="orderSuccess" style="display: none; text-align: center; padding: 40px;">
+                            <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+                            <h2 style="color: var(--success); margin-bottom: 15px;">Order Placed Successfully!</h2>
+                            <p style="color: var(--text-light); margin-bottom: 20px;">Your order has been confirmed.</p>
+                            <div style="background: var(--light-lavender); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                                <p style="font-weight: 600; color: var(--dark-lavender); margin-bottom: 10px;">Order ID:</p>
+                                <p id="orderId" style="font-size: 1.2rem; color: var(--primary-lavender); font-weight: 700;"></p>
+                            </div>
+                            <div style="background: var(--light-lavender); padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                                <p style="font-weight: 600; color: var(--dark-lavender); margin-bottom: 10px;">Estimated Delivery:</p>
+                                <p id="deliveryDate" style="font-size: 1.1rem; color: var(--primary-lavender); font-weight: 600;"></p>
+                            </div>
+                            <a href="track-order.html" class="btn btn-primary" style="display: inline-block; text-decoration: none; margin-right: 10px;">Track Order</a>
+                            <a href="index.html" class="btn btn-secondary" style="display: inline-block; text-decoration: none;">Go Home</a>
+                        </div>
+                    </div>
+                    
+                    <div class="cart-summary">
+                        <h2 style="color: var(--dark-lavender); margin-bottom: 20px;">Order Summary</h2>
+                        <div id="orderItems" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto;">
+                        </div>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid var(--light-lavender);">
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Items:</span>
+                                <span id="itemCount">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">₹0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Delivery:</span>
+                                <span style="color: var(--success);">FREE</span>
+                            </div>
+                        </div>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid var(--light-lavender);">
+                        <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 700; color: var(--primary-lavender);">
+                            <span>Total:</span>
+                            <span id="totalAmount">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 LavenderLearn & Supply. Built by B Betina Roland.</p>
+            <p>NEC First Year CSE Project</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/products.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cart = getCart();
+            
+            if (cart.length === 0) {
+                window.location.href = 'cart.html';
+                return;
+            }
+            
+            displayOrderSummary();
+            initCheckoutForm();
+        });
+
+        function displayOrderSummary() {
+            const cart = getCart();
+            const orderItems = document.getElementById('orderItems');
+            const itemCount = document.getElementById('itemCount');
+            const subtotal = document.getElementById('subtotal');
+            const totalAmount = document.getElementById('totalAmount');
+            
+            orderItems.innerHTML = cart.map(item => `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--light-lavender);">
+                    <div>
+                        <p style="font-weight: 600; color: var(--dark-lavender); margin-bottom: 5px;">${item.name}</p>
+                        <p style="font-size: 0.9rem; color: var(--text-light);">Qty: ${item.quantity} × ₹${item.price}</p>
+                    </div>
+                    <p style="font-weight: 600; color: var(--primary-lavender);">₹${(item.price * item.quantity).toFixed(2)}</p>
+                </div>
+            `).join('');
+            
+            const total = calculateTotal(cart);
+            const items = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            itemCount.textContent = items;
+            subtotal.textContent = formatCurrency(total);
+            totalAmount.textContent = formatCurrency(total);
+        }
+
+        function initCheckoutForm() {
+            const form = document.getElementById('checkoutForm');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const city = document.getElementById('city').value;
+                const address = document.getElementById('address').value;
+                const phone = document.getElementById('phone').value;
+                
+                const cart = getCart();
+                const total = calculateTotal(cart);
+                const orderId = generateOrderId();
+                
+                const weatherData = await fetchWeatherData(city);
+                const deliveryDate = calculateDeliveryDate(weatherData.isRainy);
+                
+                const order = {
+                    orderId,
+                    email,
+                    city,
+                    address,
+                    phone,
+                    items: cart,
+                    total,
+                    status: 'Ordered',
+                    deliveryDate: deliveryDate.toISOString(),
+                    placedAt: new Date().toISOString()
+                };
+                
+                saveOrder(order);
+                
+                localStorage.removeItem('cart');
+                updateCartCount();
+                
+                document.getElementById('checkoutForm').style.display = 'none';
+                document.getElementById('orderSuccess').style.display = 'block';
+                document.getElementById('orderId').textContent = orderId;
+                document.getElementById('deliveryDate').textContent = formatDate(deliveryDate);
+                
+                showToast('Order placed successfully!', 5000);
+            });
+        }
+    </script>
+</body>
+</html>

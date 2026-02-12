@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Notes - LavenderLearn</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>LavenderLearn</h2>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Home</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Educational</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="novels.html">Novels</a></li>
+                        <li><a href="courses.html">Online Courses</a></li>
+                        <li><a href="notes.html" class="active">Study Notes</a></li>
+                        <li><a href="placement.html">Placement Prep</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Office Supplies</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="stationery.html">Stationery</a></li>
+                        <li><a href="tech-accessories.html">Tech Accessories</a></li>
+                        <li><a href="organization.html">Organization</a></li>
+                        <li><a href="art-supplies.html">Art Supplies</a></li>
+                    </ul>
+                </li>
+                <li><a href="cart.html">Cart <span class="cart-count" id="cartCount">0</span></a></li>
+                <li><a href="track-order.html">Track Order</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>📝 CSE Study Notes</h1>
+                <p>Semester-wise notes from Sem 1 to Sem 8 + other branches</p>
+            </div>
+        </section>
+
+        <section class="filters-section">
+            <div class="container">
+                <input type="text" class="search-bar" id="searchInput" placeholder="Search notes...">
+                
+                <div style="margin-top: 20px;">
+                    <h3 style="color: var(--dark-lavender); margin-bottom: 15px;">Filter by Semester:</h3>
+                    <div class="filter-tabs">
+                        <button class="tab active" data-sem="all">All Semesters</button>
+                        <button class="tab" data-sem="1">Sem 1</button>
+                        <button class="tab" data-sem="2">Sem 2</button>
+                        <button class="tab" data-sem="3">Sem 3</button>
+                        <button class="tab" data-sem="4">Sem 4</button>
+                        <button class="tab" data-sem="5">Sem 5</button>
+                        <button class="tab" data-sem="6">Sem 6</button>
+                        <button class="tab" data-sem="7">Sem 7</button>
+                        <button class="tab" data-sem="8">Sem 8</button>
+                        <button class="tab" data-sem="other">Other Branches</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <div class="product-grid" id="productsGrid"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 LavenderLearn & Supply. Built by B Betina Roland.</p>
+            <p>NEC First Year CSE Project</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/products.js"></script>
+    <script>
+        let allNotes = [];
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllNotes();
+            initFilters();
+            initSearch();
+        });
+
+        function loadAllNotes() {
+            allNotes = [
+                ...PRODUCTS.notesSem1,
+                ...PRODUCTS.notesSem2,
+                ...PRODUCTS.notesSem3,
+                ...PRODUCTS.notesSem4,
+                ...PRODUCTS.notesSem5,
+                ...PRODUCTS.notesSem6,
+                ...PRODUCTS.notesSem7,
+                ...PRODUCTS.notesSem8,
+                ...PRODUCTS.notesOther
+            ];
+            displayProducts(allNotes, 'productsGrid');
+        }
+
+        function initFilters() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFilter = tab.dataset.sem;
+                    applyFilters();
+                });
+            });
+        }
+
+        function initSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const debouncedSearch = debounce(() => {
+                applyFilters();
+            }, 300);
+            searchInput.addEventListener('input', debouncedSearch);
+        }
+
+        function applyFilters() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = allNotes;
+
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'other') {
+                    filtered = filtered.filter(p => !p.semester);
+                } else {
+                    filtered = filtered.filter(p => p.semester === parseInt(currentFilter));
+                }
+            }
+
+            if (searchQuery) {
+                filtered = filtered.filter(p =>
+                    p.name.toLowerCase().includes(searchQuery) ||
+                    p.description.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            displayProducts(filtered, 'productsGrid');
+        }
+    </script>
+</body>
+</html>

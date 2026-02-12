@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Accessories - LavenderLearn</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo"><h2>LavenderLearn</h2></div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Home</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Educational</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="novels.html">Novels</a></li>
+                        <li><a href="courses.html">Online Courses</a></li>
+                        <li><a href="notes.html">Study Notes</a></li>
+                        <li><a href="placement.html">Placement Prep</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Office Supplies</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="stationery.html">Stationery</a></li>
+                        <li><a href="tech-accessories.html">Tech Accessories</a></li>
+                        <li><a href="organization.html">Organization</a></li>
+                        <li><a href="art-supplies.html">Art Supplies</a></li>
+                    </ul>
+                </li>
+                <li><a href="cart.html">Cart <span class="cart-count" id="cartCount">0</span></a></li>
+                <li><a href="track-order.html">Track Order</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+    <main>
+        <section class="page-header">
+            <div class="container"><h1>Tech Accessories</h1></div>
+        </section>
+        <section class="filters-section">
+            <div class="container">
+                <input type="text" class="search-bar" id="searchInput" placeholder="Search...">
+            </div>
+        </section>
+        <section><div class="container"><div class="product-grid" id="productsGrid"></div></div></section>
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 LavenderLearn & Supply. Built by B Betina Roland.</p>
+            <p>NEC First Year CSE Project</p>
+        </div>
+    </footer>
+    <script src="js/main.js"></script>
+    <script src="js/products.js"></script>
+    <script>
+        let currentProducts = [];
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+            initSearch();
+        });
+        function loadProducts() {
+            const category = 'tech-accessories'.replace(/-/g, '');
+            const categoryMap = {
+                'novels': 'novels',
+                'placement': 'placement',
+                'stationery': 'stationery',
+                'techaccessories': 'techAccessories',
+                'organization': 'organization',
+                'artsupplies': 'artSupplies'
+            };
+            const key = categoryMap[category];
+            currentProducts = key === 'placement' ? PRODUCTS.placement : (PRODUCTS[key] || []);
+            displayProducts(currentProducts, 'productsGrid');
+        }
+        function initSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const debouncedSearch = debounce((query) => {
+                if (query.trim()) {
+                    const filtered = currentProducts.filter(p =>
+                        p.name.toLowerCase().includes(query.toLowerCase()) ||
+                        p.description.toLowerCase().includes(query.toLowerCase())
+                    );
+                    displayProducts(filtered, 'productsGrid');
+                } else {
+                    displayProducts(currentProducts, 'productsGrid');
+                }
+            }, 300);
+            searchInput.addEventListener('input', (e) => debouncedSearch(e.target.value));
+        }
+    </script>
+</body>
+</html>
