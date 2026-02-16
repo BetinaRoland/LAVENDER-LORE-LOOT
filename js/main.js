@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     updateCartCount();
     initAnimations();
+    initQuoteRotation();
 });
 
 function initNavigation() {
@@ -215,6 +216,37 @@ function hideLoading() {
     if (loader) {
         loader.remove();
     }
+}
+
+// Quote rotation system
+function initQuoteRotation() {
+    const quoteElements = document.querySelectorAll('[data-quotes]');
+    
+    quoteElements.forEach((element) => {
+        const quotesJson = element.getAttribute('data-quotes');
+        let quotes = [];
+        
+        try {
+            quotes = JSON.parse(quotesJson);
+        } catch (e) {
+            console.error('Invalid quotes JSON:', quotesJson);
+            return;
+        }
+        
+        if (quotes.length === 0) return;
+        
+        // Set initial quote
+        let currentIndex = 0;
+        element.textContent = quotes[currentIndex];
+        
+        // Only set interval if there are multiple quotes
+        if (quotes.length > 1) {
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % quotes.length;
+                element.textContent = quotes[currentIndex];
+            }, 5000);
+        }
+    });
 }
 
 if (typeof module !== 'undefined' && module.exports) {

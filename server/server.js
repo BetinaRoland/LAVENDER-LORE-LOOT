@@ -2,9 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 app.use(cors());
 app.use(express.json());
@@ -21,6 +24,25 @@ const db = new sqlite3.Database(path.join(__dirname, 'database', 'store.db'), (e
 
 function initDatabase() {
     db.serialize(() => {
+        db.run(`CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            name TEXT,
+            role TEXT DEFAULT 'user',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS profile_visits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visitor_email TEXT NOT NULL,
+            visited_email TEXT NOT NULL,
+            visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (visitor_email) REFERENCES users(email),
+            FOREIGN KEY (visited_email) REFERENCES users(email)
+        )`);
+
         db.run(`CREATE TABLE IF NOT EXISTS products (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -67,6 +89,266 @@ function initDatabase() {
         )`);
     });
 }
+
+// Middleware to verify JWT token
+function verifyToken(req, res, next) {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+        res.status(403).json({ error: 'No token provided' });
+        return;
+    }
+    
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) {
+            res.status(401).json({ error: 'Invalid token' });
+            return;
+        }
+        req.user = decoded;
+        next();
+    });
+}
+
+// ===== AUTHENTICATION ROUTES =====
+
+// Register/Signup
+app.post('/api/auth/signup', async (req, res) => {
+    const { email, password, name } = req.body;
+    
+    if (!email || !password || !name) {
+        res.status(400).json({ error: 'Missing required fields' });
+        return;
+    }
+    
+    if (password.length < 6) {
+        res.status(400).json({ error: 'Password must be at least 6 characters' });
+        return;
+    }
+    
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        db.run(
+            `INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)`,
+            [email, hashedPassword, name, 'user'],
+            function(err) {
+                if (err) {
+                    if (err.message.includes('UNIQUE constraint failed')) {
+                        res.status(400).json({ error: 'Email already registered' });
+                    } else {
+                        res.status(500).json({ error: err.message });
+                    }
+                    return;
+                }
+                
+                const token = jwt.sign(
+                    { id: this.lastID, email, name, role: 'user' },
+                    JWT_SECRET,
+                    { expiresIn: '7d' }
+                );
+                
+                res.status(201).json({
+                    success: true,
+                    token,
+                    user: { email, name, role: 'user' }
+                });
+            }
+        );
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Login
+app.post('/api/auth/login', (req, res) => {
+    const { email, password, rememberMe } = req.body;
+    
+    if (!email || !password) {
+        res.status(400).json({ error: 'Email and password required' });
+        return;
+    }
+    
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        
+        if (!user) {
+            res.status(401).json({ error: 'Invalid email or password' });
+            return;
+        }
+        
+        try {
+            const validPassword = await bcrypt.compare(password, user.password);
+            
+            if (!validPassword) {
+                res.status(401).json({ error: 'Invalid email or password' });
+                return;
+            }
+            
+            const expiresIn = rememberMe ? '30d' : '7d';
+            const token = jwt.sign(
+                { id: user.id, email: user.email, name: user.name, role: user.role },
+                JWT_SECRET,
+                { expiresIn }
+            );
+            
+            res.json({
+                success: true,
+                token,
+                user: { email: user.email, name: user.name, role: user.role }
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+// Forgot Password - Send reset link (simplified for now)
+app.post('/api/auth/forgot-password', (req, res) => {
+    const { email } = req.body;
+    
+    if (!email) {
+        res.status(400).json({ error: 'Email required' });
+        return;
+    }
+    
+    db.get('SELECT * FROM users WHERE email = ?', [email], (err, user) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+        
+        // In production, send actual email with reset link
+        const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
+        res.json({
+            success: true,
+            message: 'Password reset link sent (check demo email)',
+            resetToken // For demo purposes only
+        });
+    });
+});
+
+// Get user profile
+app.get('/api/auth/profile', verifyToken, (req, res) => {
+    db.get('SELECT id, email, name, role, created_at FROM users WHERE email = ?', 
+        [req.user.email], 
+        (err, user) => {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            
+            if (!user) {
+                res.status(404).json({ error: 'User not found' });
+                return;
+            }
+            
+            res.json(user);
+        }
+    );
+});
+
+// Track profile visit
+app.post('/api/auth/visit-profile', verifyToken, (req, res) => {
+    const { visitedEmail } = req.body;
+    
+    if (!visitedEmail) {
+        res.status(400).json({ error: 'visitedEmail required' });
+        return;
+    }
+    
+    db.run(
+        `INSERT INTO profile_visits (visitor_email, visited_email) VALUES (?, ?)`,
+        [req.user.email, visitedEmail],
+        (err) => {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({ success: true });
+        }
+    );
+});
+
+// Get all users (Admin only)
+app.get('/api/admin/users', verifyToken, (req, res) => {
+    if (req.user.role !== 'admin') {
+        res.status(403).json({ error: 'Admin access required' });
+        return;
+    }
+    
+    db.all('SELECT id, email, name, role, created_at FROM users', (err, users) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json(users);
+    });
+});
+
+// Get all orders (Admin only)
+app.get('/api/admin/orders', verifyToken, (req, res) => {
+    if (req.user.role !== 'admin') {
+        res.status(403).json({ error: 'Admin access required' });
+        return;
+    }
+    
+    const query = `
+        SELECT o.*, 
+            GROUP_CONCAT(oi.product_id || ':' || oi.quantity || ':' || oi.price_at_time) as items_data
+        FROM orders o
+        LEFT JOIN order_items oi ON o.order_id = oi.order_id
+        GROUP BY o.order_id
+        ORDER BY o.created_at DESC
+    `;
+    
+    db.all(query, (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        
+        const ordersWithItems = rows.map(order => {
+            const items = order.items_data ? order.items_data.split(',').map(itemStr => {
+                const [id, quantity, price] = itemStr.split(':');
+                return { id, quantity: parseInt(quantity), price: parseFloat(price) };
+            }) : [];
+            return { ...order, items, items_data: undefined };
+        });
+        
+        res.json(ordersWithItems);
+    });
+});
+
+// Get profile visits for admin
+app.get('/api/admin/profile-visits', verifyToken, (req, res) => {
+    if (req.user.role !== 'admin') {
+        res.status(403).json({ error: 'Admin access required' });
+        return;
+    }
+    
+    const query = `
+        SELECT pv.*, u.name as visitor_name
+        FROM profile_visits pv
+        JOIN users u ON pv.visitor_email = u.email
+        ORDER BY pv.visited_at DESC
+    `;
+    
+    db.all(query, (err, visits) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json(visits);
+    });
+});
 
 app.get('/api/products', (req, res) => {
     const { category, type, semester } = req.query;

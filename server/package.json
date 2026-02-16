@@ -7,14 +7,22 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["ecommerce", "education", "nodejs", "express", "sqlite"],
+  "keywords": [
+    "ecommerce",
+    "education",
+    "nodejs",
+    "express",
+    "sqlite"
+  ],
   "author": "B Betina Roland",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "sqlite3": "^5.1.6",
-    "node-fetch": "^3.3.2"
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "node-fetch": "^3.3.2",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
