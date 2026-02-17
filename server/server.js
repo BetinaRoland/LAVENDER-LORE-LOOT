@@ -13,6 +13,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
+// Ensure OPTIONS preflight requests are accepted for all routes
+app.options('*', cors());
+
 const db = new sqlite3.Database(path.join(__dirname, 'database', 'store.db'), (err) => {
     if (err) {
         console.error('Error connecting to database:', err.message);
@@ -440,39 +443,51 @@ app.delete('/api/cart/:id', (req, res) => {
 });
 
 app.post('/api/orders', async (req, res) => {
-    const { orderId, email, city, address, phone, items, total, deliveryDate } = req.body;
+    try {
+        const { orderId: suppliedOrderId, email, city, address, phone, items, total, deliveryDate } = req.body;
 
-    if (!orderId || !email || !city || !items || !total) {
-        res.status(400).json({ error: 'Missing required fields' });
-        return;
-    }
-
-    const orderQuery = `
-        INSERT INTO orders (order_id, user_email, city, address, phone, total, delivery_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    db.run(orderQuery, [orderId, email, city, address, phone, total, deliveryDate], function(err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
+        if (!email || !city || !items || !total) {
+            res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
-        const itemsQuery = `INSERT INTO order_items (order_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)`;
-        let completed = 0;
+        // Generate a unique order ID server-side if not supplied
+        const orderId = suppliedOrderId || `ORD-${Date.now()}-${Math.random().toString(36).substring(2,9).toUpperCase()}`;
 
-        items.forEach(item => {
-            db.run(itemsQuery, [orderId, item.id, item.quantity, item.price], (err) => {
-                if (err) {
-                    console.error('Error inserting order item:', err.message);
-                }
-                completed++;
-                if (completed === items.length) {
-                    res.json({ success: true, orderId });
-                }
+        const orderQuery = `
+            INSERT INTO orders (order_id, user_email, city, address, phone, total, delivery_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.run(orderQuery, [orderId, email, city, address, phone, total, deliveryDate], function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+
+            const itemsQuery = `INSERT INTO order_items (order_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)`;
+            let completed = 0;
+
+            if (!Array.isArray(items) || items.length === 0) {
+                res.json({ success: true, orderId });
+                return;
+            }
+
+            items.forEach(item => {
+                db.run(itemsQuery, [orderId, item.id, item.quantity, item.price], (err) => {
+                    if (err) {
+                        console.error('Error inserting order item:', err.message);
+                    }
+                    completed++;
+                    if (completed === items.length) {
+                        res.json({ success: true, orderId });
+                    }
+                });
             });
         });
-    });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.get('/api/orders/track/:email', (req, res) => {

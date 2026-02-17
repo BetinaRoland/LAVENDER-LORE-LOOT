@@ -10,16 +10,97 @@ function initNavigation() {
     const navMenu = document.getElementById('navMenu');
     
     if (hamburger && navMenu) {
-        hamburger.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            hamburger.classList.toggle('active');
+        const isMobileView = () => window.matchMedia('(max-width: 768px)').matches;
+        const closeOpenDropdowns = () => {
+            navMenu.querySelectorAll('li.dropdown.open').forEach((item) => {
+                item.classList.remove('open');
+            });
+        };
+
+        // Provide button semantics and initial aria state
+        hamburger.setAttribute('role', 'button');
+        hamburger.setAttribute('tabindex', '0');
+        hamburger.setAttribute('aria-label', 'Toggle navigation');
+        hamburger.setAttribute('aria-expanded', 'false');
+
+        const closeNav = () => {
+            navMenu.classList.remove('active');
+            hamburger.classList.remove('active');
+            hamburger.setAttribute('aria-expanded', 'false');
+            document.documentElement.classList.remove('nav-open');
+            closeOpenDropdowns();
+        };
+
+        const openNav = () => {
+            navMenu.classList.add('active');
+            hamburger.classList.add('active');
+            hamburger.setAttribute('aria-expanded', 'true');
+            document.documentElement.classList.add('nav-open');
+        };
+
+        hamburger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (navMenu.classList.contains('active')) closeNav(); else openNav();
         });
 
+        // Allow Enter/Space to toggle when focused
+        hamburger.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                hamburger.click();
+            }
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+                closeNav();
+            }
+        });
+
+        // Close when clicking outside the menu on mobile
+        document.addEventListener('click', (e) => {
+            if (!navMenu.contains(e.target) && !hamburger.contains(e.target) && navMenu.classList.contains('active')) {
+                closeNav();
+            }
+        });
+
+        // Toggle dropdowns on mobile.
+        navMenu.querySelectorAll('.dropdown-toggle').forEach((toggle) => {
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                if (!isMobileView()) {
+                    return;
+                }
+
+                e.stopPropagation();
+                const dropdown = toggle.closest('li.dropdown');
+                if (!dropdown) return;
+
+                const shouldOpen = !dropdown.classList.contains('open');
+                closeOpenDropdowns();
+                if (shouldOpen) {
+                    dropdown.classList.add('open');
+                }
+            });
+        });
+
+        // Auto-close when a nav link is clicked
         document.querySelectorAll('.nav-menu a').forEach(link => {
             link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
-                hamburger.classList.remove('active');
+                if (isMobileView() && link.classList.contains('dropdown-toggle')) {
+                    return;
+                }
+                closeNav();
             });
+        });
+
+        // If viewport changes to desktop, ensure mobile nav state is reset.
+        window.addEventListener('resize', () => {
+            if (!isMobileView()) {
+                closeNav();
+            }
         });
     }
 }

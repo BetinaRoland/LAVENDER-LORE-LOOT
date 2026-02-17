@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;600&display=swap');
+
 :root {
     --primary-lavender: #9B84C6;
     --light-lavender: #E6E0F0;
@@ -26,13 +28,24 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #F8F0FF 0%, #FFE8F0 50%, #F0E8FF 100%);
     background-attachment: fixed;
     color: var(--text-dark);
     line-height: 1.6;
+    font-weight: 600;
     overflow-x: hidden;
     position: relative;
+}
+
+/* Headings use an elegant serif for a chic, expensive feel */
+h1, h2, h3, h4, h5 {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    color: var(--dark-plum);
+}
+
+.name, .logo h2 {
+    font-family: 'Playfair Display', serif;
 }
 
 body::before {
@@ -74,10 +87,39 @@ body::before {
     height: 70px;
 }
 
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .logo h2 {
     color: var(--primary-lavender);
     font-size: 1.8rem;
     font-weight: 700;
+}
+
+.brand-name {
+    color: var(--primary-lavender);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+/* Branding image used for header and profile (replace images/branding.png) */
+.branding {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.logo img.branding {
+    /* keep spacing consistent with text logo */
+    margin-right: 0;
 }
 
 .nav-menu {
@@ -94,7 +136,7 @@ body::before {
 .nav-menu a {
     text-decoration: none;
     color: var(--text-dark);
-    font-weight: 500;
+    font-weight: 700;
     transition: color 0.3s;
     display: flex;
     align-items: center;
@@ -165,6 +207,109 @@ body::before {
     background: var(--primary-lavender);
     border-radius: 3px;
     transition: all 0.3s;
+}
+
+/* Mobile navigation styles */
+@media (max-width: 768px) {
+    .nav-container {
+        height: 64px;
+        padding: 0 14px;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .nav-menu {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: min(72vh, 520px);
+        overflow-y: auto;
+        background: var(--white);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        border-top: 1px solid rgba(0,0,0,0.06);
+        border-radius: 14px 14px 0 0;
+        transform: translateY(110%);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform 0.22s ease, opacity 0.22s ease, visibility 0.22s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+        z-index: 2000;
+    }
+
+    .nav-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .nav-menu li {
+        width: 100%;
+    }
+
+    .nav-menu a {
+        padding: 12px 10px;
+        display: block;
+        width: 100%;
+        border-radius: 8px;
+    }
+
+    .nav-menu .dropdown-menu {
+        position: static;
+        box-shadow: none;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        display: none;
+    }
+
+    .nav-menu li.dropdown:hover .dropdown-menu { display: none; }
+
+    .nav-menu li.dropdown.open .dropdown-menu { display: block; }
+
+    .logo h2 { display: none; }
+    .logo img.branding { width: 40px; height: 40px; }
+    .logo h2.brand-name {
+        display: block;
+        font-size: 0.72rem;
+        line-height: 1.15;
+        max-width: 118px;
+        white-space: normal;
+    }
+}
+
+/* Backdrop that appears behind the mobile nav when open */
+.nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.36);
+    z-index: 1500;
+    pointer-events: auto;
+}
+
+/* Stronger, visible focus styles for accessibility */
+:+:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 3px solid rgba(155,132,198,0.9);
+    outline-offset: 3px;
+}
+
+/* Make interactive items slightly larger on touch devices */
+@media (max-width: 768px) {
+    .nav-menu a {
+        padding: 14px 12px;
+        font-size: 1rem;
+    }
+    .hamburger {
+        padding: 8px;
+    }
 }
 
 .hero {
@@ -284,6 +429,7 @@ body::before {
     font-size: 1.1rem;
     color: var(--text-light);
     line-height: 1.8;
+    font-weight: 600;
 }
 
 .skills-grid {
@@ -580,6 +726,19 @@ body::before {
 
 .footer p {
     margin: 5px 0;
+}
+
+.checkout-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+    gap: 30px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 .product-grid {
@@ -913,27 +1072,6 @@ body::before {
 }
 
 @media (max-width: 768px) {
-    .hamburger {
-        display: flex;
-    }
-
-    .nav-menu {
-        position: fixed;
-        left: -100%;
-        top: 70px;
-        flex-direction: column;
-        background: var(--white);
-        width: 100%;
-        text-align: center;
-        transition: 0.3s;
-        box-shadow: 0 10px 27px var(--shadow);
-        padding: 20px 0;
-    }
-
-    .nav-menu.active {
-        left: 0;
-    }
-
     .dropdown-menu {
         position: static;
         box-shadow: none;

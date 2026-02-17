@@ -11,30 +11,15 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">
-                <h2>LavenderLearn</h2>
+                <img src="images/lavi.jpeg" alt="Lavender - Lore and Loot" class="branding">
+                <h2 class="brand-name">LAVENDER</h2>
             </div>
             <ul class="nav-menu" id="navMenu">
-                <li><a href="index.html">Home</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">Educational</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="novels.html">Novels</a></li>
-                        <li><a href="courses.html">Online Courses</a></li>
-                        <li><a href="notes.html">Study Notes</a></li>
-                        <li><a href="placement.html">Placement Prep</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">Office Supplies</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="stationery.html">Stationery</a></li>
-                        <li><a href="tech-accessories.html">Tech Accessories</a></li>
-                        <li><a href="organization.html">Organization</a></li>
-                        <li><a href="art-supplies.html">Art Supplies</a></li>
-                    </ul>
-                </li>
-                <li><a href="cart.html">Cart <span class="cart-count" id="cartCount">0</span></a></li>
-                <li><a href="track-order.html">Track Order</a></li>
+                <li><a href="index.html">🏠 Home</a></li>
+                <li><a href="courses.html">📚 Courses</a></li>
+                <li><a href="notes.html">📖 Notes</a></li>
+                <li><a href="cart.html">🛒 Cart <span class="cart-count" id="cartCount">0</span></a></li>
+                <li><a href="track-order.html">📦 Track</a></li>
             </ul>
             <div class="hamburger" id="hamburger">
                 <span></span>
@@ -55,7 +40,7 @@
 
         <section style="padding: 40px 20px;">
             <div class="container">
-                <div style="display: grid; grid-template-columns: 1fr 400px; gap: 30px;">
+                <div class="checkout-layout">
                     <div style="background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px var(--shadow);">
                         <h2 style="color: var(--dark-lavender); margin-bottom: 30px;">Delivery Information</h2>
                         
@@ -192,37 +177,162 @@
                 
                 const cart = getCart();
                 const total = calculateTotal(cart);
-                const orderId = generateOrderId();
-                
-                const weatherData = await fetchWeatherData(city);
-                const deliveryDate = calculateDeliveryDate(weatherData.isRainy);
-                
-                const order = {
-                    orderId,
-                    email,
-                    city,
-                    address,
-                    phone,
-                    items: cart,
-                    total,
-                    status: 'Ordered',
-                    deliveryDate: deliveryDate.toISOString(),
-                    placedAt: new Date().toISOString()
-                };
-                
-                saveOrder(order);
-                
-                localStorage.removeItem('cart');
-                updateCartCount();
-                
-                document.getElementById('checkoutForm').style.display = 'none';
-                document.getElementById('orderSuccess').style.display = 'block';
-                document.getElementById('orderId').textContent = orderId;
-                document.getElementById('deliveryDate').textContent = formatDate(deliveryDate);
-                
-                showToast('Order placed successfully!', 5000);
+
+                // Ask server to create order and generate order ID server-side
+                try {
+                    const body = {
+                        email,
+                        city,
+                        address,
+                        phone,
+                        items: cart,
+                        total
+                    };
+
+                    const apiBases = [];
+                    const addApiBase = (base) => {
+                        if (!base) return;
+                        const normalized = base.replace(/\/+$/, '');
+                        if (!apiBases.includes(normalized)) {
+                            apiBases.push(normalized);
+                        }
+                    };
+
+                    if (location && location.origin && location.origin !== 'null') {
+                        addApiBase(location.origin);
+                    }
+
+                    if (location && location.hostname) {
+                        const protocol = location.protocol === 'https:' ? 'https:' : 'http:';
+                        addApiBase(`${protocol}//${location.hostname}:3000`);
+
+                        // Support common dev-tunnel host patterns:
+                        // 500.region.devtunnels.ms -> 3000.region.devtunnels.ms
+                        const dotPortMatch = location.hostname.match(/^(\d+)\.(.+\.devtunnels\.ms)$/i);
+                        if (dotPortMatch) {
+                            addApiBase(`${protocol}//3000.${dotPortMatch[2]}`);
+                        }
+
+                        // tunnel-500.region.devtunnels.ms -> tunnel-3000.region.devtunnels.ms
+                        const dashPortMatch = location.hostname.match(/^(.+)-(\d+)\.(.+\.devtunnels\.ms)$/i);
+                        if (dashPortMatch) {
+                            addApiBase(`${protocol}//${dashPortMatch[1]}-3000.${dashPortMatch[3]}`);
+                        }
+                    }
+
+                    // Useful when opening directly on desktop localhost.
+                    addApiBase('http://localhost:3000');
+
+                    let result = {};
+                    let lastApiError = null;
+                    let usedLocalFallback = false;
+                    for (const apiBase of apiBases) {
+                        try {
+                            const resp = await fetch(`${apiBase}/api/orders`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                            });
+
+                            try {
+                                result = await resp.json();
+                            } catch (parseErr) {
+                                result = {};
+                            }
+
+                            if (resp.ok) {
+                                lastApiError = null;
+                                break;
+                            }
+
+                            const msg = result && result.error ? result.error : (resp.statusText || 'Order API error');
+                            lastApiError = new Error(`${msg} at ${apiBase}`);
+                            continue;
+                        } catch (apiErr) {
+                            lastApiError = apiErr;
+                        }
+                    }
+
+                    let serverOrderId = result.orderId || result.order_id || result.orderId;
+                    if (lastApiError) {
+                        // Keep checkout usable on mobile even if backend tunnel is unavailable.
+                        usedLocalFallback = true;
+                        serverOrderId = generateOrderId();
+                        console.warn('Order API unavailable, saving order locally only:', lastApiError);
+                    }
+                    if (!serverOrderId) {
+                        serverOrderId = generateOrderId();
+                    }
+
+                    // Still compute an estimated delivery date client-side for display
+                    const weatherData = await fetchWeatherData(city);
+                    const deliveryDate = calculateDeliveryDate(weatherData.isRainy);
+
+                    const order = {
+                        orderId: serverOrderId,
+                        email,
+                        city,
+                        address,
+                        phone,
+                        items: cart,
+                        total,
+                        status: 'Ordered',
+                        deliveryDate: deliveryDate.toISOString(),
+                        placedAt: new Date().toISOString()
+                    };
+
+                    saveOrder(order);
+                    localStorage.removeItem('cart');
+                    updateCartCount();
+
+                    document.getElementById('checkoutForm').style.display = 'none';
+                    document.getElementById('orderSuccess').style.display = 'block';
+                    document.getElementById('orderId').textContent = serverOrderId;
+                    document.getElementById('deliveryDate').textContent = formatDate(deliveryDate);
+
+                    if (usedLocalFallback) {
+                        showToast('Order saved locally. Backend is unreachable right now.', 6000);
+                    } else {
+                        showToast('Order placed successfully!', 5000);
+                    }
+                } catch (err) {
+                    console.error('Order error:', err);
+                    try {
+                        const fallbackOrderId = generateOrderId();
+                        const weatherData = await fetchWeatherData(city);
+                        const deliveryDate = calculateDeliveryDate(weatherData.isRainy);
+
+                        const fallbackOrder = {
+                            orderId: fallbackOrderId,
+                            email,
+                            city,
+                            address,
+                            phone,
+                            items: cart,
+                            total,
+                            status: 'Ordered',
+                            deliveryDate: deliveryDate.toISOString(),
+                            placedAt: new Date().toISOString()
+                        };
+
+                        saveOrder(fallbackOrder);
+                        localStorage.removeItem('cart');
+                        updateCartCount();
+
+                        document.getElementById('checkoutForm').style.display = 'none';
+                        document.getElementById('orderSuccess').style.display = 'block';
+                        document.getElementById('orderId').textContent = fallbackOrderId;
+                        document.getElementById('deliveryDate').textContent = formatDate(deliveryDate);
+
+                        showToast('Order saved locally. Backend/API unavailable right now.', 6000);
+                    } catch (fallbackErr) {
+                        console.error('Local order fallback error:', fallbackErr);
+                        showToast('Could not save order on this device. Please try again.', 6000);
+                    }
+                }
             });
         }
     </script>
 </body>
 </html>
+
