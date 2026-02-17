@@ -413,7 +413,7 @@ Email: 25104003@nec.edu.in
 
 ## 🙏 Acknowledgments
 
-- Nehru Engineering College for the assignment opportunity
+- National Engineering College for the assignment opportunity
 - OpenWeatherMap for weather API
 - Node.js and Express communities for excellent documentation
 
