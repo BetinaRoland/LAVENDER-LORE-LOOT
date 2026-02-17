@@ -1,9 +1,9 @@
-# LavenderLearn & Supply
+#Lavender - Lore and Loot
 
 A full-stack e-commerce platform designed for students, offering educational materials (courses, study notes, novels, placement prep) and office supplies.
 
 **Built by:** B Betina Roland  
-**College:** Nehru Engineering College (NEC)  
+**College:** National Engineering College (NEC)  
 **Program:** First Year BE CSE  
 **Project Type:** Personal Page and Online Store Assignment
 
@@ -11,7 +11,7 @@ A full-stack e-commerce platform designed for students, offering educational mat
 
 ## 🎯 Project Overview
 
-LavenderLearn & Supply is a comprehensive e-commerce platform that serves as a one-stop shop for students. It features:
+Lavender a comprehensive e-commerce platform that serves as a one-stop shop for students. It features:
 
 - **Educational Materials**: Online courses, semester-wise CSE notes (Sem 1-8), novels, and placement preparation resources
 - **Office Supplies**: Stationery, tech accessories, organization tools, and art supplies
