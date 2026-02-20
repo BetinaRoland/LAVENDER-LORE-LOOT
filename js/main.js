@@ -329,6 +329,19 @@ function initQuoteRotation() {
         }
     });
 }
+// Fix dropdown hover gap
+document.querySelectorAll('.dropdown').forEach(dropdown => {
+    let timeout;
+    dropdown.addEventListener('mouseenter', () => {
+        clearTimeout(timeout);
+        dropdown.querySelector('.dropdown-menu').style.display = 'block';
+    });
+    dropdown.addEventListener('mouseleave', () => {
+        timeout = setTimeout(() => {
+            dropdown.querySelector('.dropdown-menu').style.display = 'none';
+        }, 300);
+    });
+});
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
